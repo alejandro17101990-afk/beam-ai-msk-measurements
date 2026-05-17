@@ -8,32 +8,44 @@ st.set_page_config(page_title="beam AI - MSK", layout="wide")
 st.title("beam AI")
 st.subheader("Plataforma de Mediciones Automatizadas MSK")
 
-# 1. Crear el botón para subir archivos
 archivo_subido = st.file_uploader("Sube una radiografía panorámica", type=['dcm', 'jpg', 'jpeg', 'png'])
 
-# 2. Lógica para leer el archivo si el usuario sube algo
 if archivo_subido is not None:
     try:
-        st.success("Archivo detectado. Procesando imagen...")
-        
-        # Si es un archivo médico DICOM
+        # 1. Preparar la imagen (igual que antes)
         if archivo_subido.name.lower().endswith('.dcm'):
-            # Leer el archivo DICOM
             dicom = pydicom.dcmread(archivo_subido)
             img_array = dicom.pixel_array
-            
-            # Ajustar el contraste y brillo automáticamente (Normalización)
             img_array = img_array - np.min(img_array)
             img_array = img_array / np.max(img_array)
             img_array = (img_array * 255).astype(np.uint8)
-            
-            # Mostrar la imagen
-            st.image(img_array, caption=f"Radiografía DICOM: {archivo_subido.name}", use_container_width=True)
-        
-        # Si es una imagen normal (JPEG o PNG)
+            imagen_final = img_array
         else:
-            image = Image.open(archivo_subido)
-            st.image(image, caption=f"Radiografía Estándar: {archivo_subido.name}", use_container_width=True)
+            imagen_final = Image.open(archivo_subido)
+        
+        # 2. Dividir la pantalla en dos columnas
+        col1, col2 = st.columns(2)
+        
+        # Columna Izquierda: Imagen Original
+        with col1:
+            st.markdown("### Imagen Original")
+            st.image(imagen_final, use_container_width=True)
             
+        # Columna Derecha: Panel de Herramientas IA
+        with col2:
+            st.markdown("### Panel de Análisis IA")
+            st.info("Selecciona el tipo de análisis que deseas realizar sobre la imagen.")
+            
+            # Botones de medición
+            btn_columna = st.button("📏 Medir Eje Vertebral (Ángulo de Cobb)", use_container_width=True)
+            btn_pelvicos = st.button("📐 Medir Eje Mecánico (Miembros Pélvicos)", use_container_width=True)
+            
+            # Qué pasa cuando presionas los botones
+            if btn_columna:
+                st.warning("Módulo de IA en construcción: Aquí se mostrará la detección de cuerpos vertebrales y el cálculo del ángulo.")
+            
+            if btn_pelvicos:
+                st.warning("Módulo de IA en construcción: Aquí se trazarán los puntos de cadera, rodilla y tobillo.")
+                
     except Exception as e:
         st.error(f"Hubo un error al leer la imagen: {e}")
